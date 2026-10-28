@@ -21,9 +21,9 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://drapelo.com",
+      "https://drapelo.shop",
       "https://www.drapelo.shop",
-      "https://kickwear-seven.vercel.app"
+      "https://drapelo-three.vercel.app"
     ],
     credentials: true,
   })
