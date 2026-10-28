@@ -22,7 +22,7 @@ const formatTeam = (s: string) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-// Same card for 1 or 2 products: big square image left (42%), details right.
+// Same card for 1, 2 or 3 products: big square image left (42%), details right.
 function Spotlight({ product, priority }: { product: Product; priority?: boolean }) {
   const image = product.images?.[0];
   const off =
@@ -144,11 +144,27 @@ export default async function FeaturedProducts() {
               Add products from the admin panel.
             </p>
           </div>
-        ) : count <= 2 ? (
+        ) : count <= 3 ? (
           <div className="grid gap-4 xl:grid-cols-2 xl:gap-6">
-            {featured.map((product, i) => (
-              <Spotlight key={product._id} product={product} priority={i === 0} />
-            ))}
+            {featured.map((product, i) => {
+              // 3rd card: sits below, centered between the top two (xl only)
+              if (count === 3 && i === 2) {
+                return (
+                  <div
+                    key={product._id}
+                    className="xl:col-span-2 xl:flex xl:justify-center"
+                  >
+                    {/* half width minus half of the gap-6 (1.5rem) */}
+                    <div className="w-full xl:w-[calc(50%-0.75rem)]">
+                      <Spotlight product={product} />
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <Spotlight key={product._id} product={product} priority={i === 0} />
+              );
+            })}
           </div>
         ) : (
           <div className={`grid ${gridClass}`}>

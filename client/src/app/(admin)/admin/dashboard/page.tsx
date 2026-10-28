@@ -140,7 +140,7 @@ export default function Dashboard() {
           icon={<ShoppingCart className="h-5 w-5" />}
         />
         <Card
-          title="Revenue"
+          title="Sell"
           value={money(revenue)}
           icon={<TrendingUp className="h-5 w-5" />}
         />

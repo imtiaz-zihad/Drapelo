@@ -1,10 +1,9 @@
 import { MapPin, Phone, Truck } from "lucide-react";
 import Link from "next/link";
 
-// ⚠️ Drapelo-r WhatsApp number boshao (8801XXXXXXXXX)
 const WHATSAPP_NUMBER = "8801894302115";
-const FB_PAGE = "https://www.facebook.com/drapelobd";
-const INSTAGRAM_URL = "https://www.instagram.com/drapelobd";
+const FB_PAGE = "https://www.facebook.com/drapelobd2";
+const INSTAGRAM_URL = "https://www.instagram.com/drapelo.bd";
 
 export default function Footer() {
   return (
