@@ -18,7 +18,8 @@ import type { ProductAddOns } from "@/types/product";
 import { track, getMetaIds } from "@/lib/fbpixel";
 import { useAbandonedCheckout } from "@/lib/useAbandonedCheckout";
 
-const CONTACT_NUMBER =process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "8801894302115";
+const CONTACT_NUMBER =
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "8801958403338";
 
 const BD_PHONE_REGEX = /^01[3-9]\d{8}$/;
 
@@ -141,7 +142,7 @@ export default function OrderButton({
   const [formVisible, setFormVisible] = useState(false);
 
   const sizeRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLDivElement>(null); // wraps the form AND the success card
   const addToCartSent = useRef(false);
   const checkoutStarted = useRef(false);
 
@@ -308,7 +309,7 @@ export default function OrderButton({
     return (
       <div
         ref={formRef}
-        className="space-y-5 rounded-3xl border border-border/60 bg-card p-6 text-center shadow-sm md:p-8"
+        className="scroll-mt-24 space-y-5 rounded-3xl border border-border/60 bg-card p-6 text-center shadow-sm md:p-8"
       >
         <div className="flex justify-center">
           <div className="rounded-full bg-green-100 p-4">
@@ -444,154 +445,157 @@ export default function OrderButton({
         </div>
 
         {/* ORDER FORM */}
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit}
-          noValidate
-          className="scroll-mt-24 space-y-4 rounded-2xl border border-primary/30 bg-card p-5 shadow-sm md:p-6"
-        >
-          <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase">
-            <MapPin className="h-5 w-5 text-primary" />
-            Order now, pay on delivery
-          </h2>
+        <div ref={formRef} className="scroll-mt-24">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="space-y-4 rounded-2xl border border-primary/30 bg-card p-5 shadow-sm md:p-6"
+          >
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase">
+              <MapPin className="h-5 w-5 text-primary" />
+              Order now, pay on delivery
+            </h2>
 
-          <div className="space-y-4" onFocusCapture={startCheckout}>
-            <Field id="name" label="Full name" error={errors.customerName}>
-              <input
-                id="name"
-                autoComplete="name"
-                placeholder="Your name"
-                value={form.customerName}
-                onChange={(e) =>
-                  setForm({ ...form, customerName: e.target.value })
-                }
-                aria-invalid={Boolean(errors.customerName)}
-                className={inputClass(Boolean(errors.customerName))}
-              />
-            </Field>
+            <div className="space-y-4" onFocusCapture={startCheckout}>
+              <Field id="name" label="Full name" error={errors.customerName}>
+                <input
+                  id="name"
+                  autoComplete="name"
+                  placeholder="Your name"
+                  value={form.customerName}
+                  onChange={(e) =>
+                    setForm({ ...form, customerName: e.target.value })
+                  }
+                  aria-invalid={Boolean(errors.customerName)}
+                  className={inputClass(Boolean(errors.customerName))}
+                />
+              </Field>
 
-            <Field id="phone" label="Mobile number" error={errors.phone}>
-              <input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="01XXXXXXXXX"
-                value={form.phone}
-                onChange={(e) =>
-                  setForm({ ...form, phone: normalizePhone(e.target.value) })
-                }
-                aria-invalid={Boolean(errors.phone)}
-                className={inputClass(Boolean(errors.phone))}
-              />
-            </Field>
+              <Field id="phone" label="Mobile number" error={errors.phone}>
+                <input
+                  id="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="01XXXXXXXXX"
+                  value={form.phone}
+                  onChange={(e) =>
+                    setForm({ ...form, phone: normalizePhone(e.target.value) })
+                  }
+                  aria-invalid={Boolean(errors.phone)}
+                  className={inputClass(Boolean(errors.phone))}
+                />
+              </Field>
 
-            <Field id="address" label="Full address" error={errors.address}>
-              <textarea
-                id="address"
-                rows={3}
-                autoComplete="street-address"
-                placeholder="House, road, area, thana, district"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                aria-invalid={Boolean(errors.address)}
-                className={inputClass(Boolean(errors.address))}
-              />
-            </Field>
+              <Field id="address" label="Full address" error={errors.address}>
+                <textarea
+                  id="address"
+                  rows={3}
+                  autoComplete="street-address"
+                  placeholder="House, road, area, thana, district"
+                  value={form.address}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
+                  aria-invalid={Boolean(errors.address)}
+                  className={inputClass(Boolean(errors.address))}
+                />
+              </Field>
 
-            {/* Delivery area */}
-            <div>
-              <span className="mb-1.5 block text-sm font-medium">
-                Delivery area
-              </span>
-              <div
-                role="radiogroup"
-                aria-label="Delivery area"
-                className="grid grid-cols-2 gap-3"
-              >
-                {(Object.keys(DELIVERY) as DeliveryArea[]).map((key) => {
-                  const active = form.deliveryArea === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      onClick={() => setForm({ ...form, deliveryArea: key })}
-                      className={`rounded-xl border p-3 text-left transition-colors ${
-                        active
-                          ? "border-primary bg-primary/5"
-                          : "border-border bg-card hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold">
-                        {DELIVERY[key].label}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {DELIVERY[key].hint}
-                      </span>
-                      <span className="mt-1 block text-sm font-bold text-primary">
-                        {money(DELIVERY[key].charge)}
-                      </span>
-                    </button>
-                  );
-                })}
+              {/* Delivery area */}
+              <div>
+                <span className="mb-1.5 block text-sm font-medium">
+                  Delivery area
+                </span>
+                <div
+                  role="radiogroup"
+                  aria-label="Delivery area"
+                  className="grid grid-cols-2 gap-3"
+                >
+                  {(Object.keys(DELIVERY) as DeliveryArea[]).map((key) => {
+                    const active = form.deliveryArea === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setForm({ ...form, deliveryArea: key })}
+                        className={`rounded-xl border p-3 text-left transition-colors ${
+                          active
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-card hover:border-primary/50"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold">
+                          {DELIVERY[key].label}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {DELIVERY[key].hint}
+                        </span>
+                        <span className="mt-1 block text-sm font-bold text-primary">
+                          {money(DELIVERY[key].charge)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Price summary */}
-          <div className="space-y-2 rounded-xl bg-secondary/60 p-4">
-            <Line label={`Jacket × ${quantity}`} value={subtotal} />
-            <Line label="Delivery" value={deliveryCharge} />
-            <div className="border-t border-border/60 pt-2">
-              <Line label="Total" value={total} strong />
+            {/* Price summary */}
+            <div className="space-y-2 rounded-xl bg-secondary/60 p-4">
+              <Line label={`Jacket × ${quantity}`} value={subtotal} />
+              <Line label="Delivery" value={deliveryCharge} />
+              <div className="border-t border-border/60 pt-2">
+                <Line label="Total" value={total} strong />
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Banknote className="h-5 w-5 shrink-0 text-primary" />
-            Cash on Delivery. Pay after receiving your order.
-          </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Banknote className="h-5 w-5 shrink-0 text-primary" />
+              Cash on Delivery. Pay after receiving your order.
+            </div>
 
-          {outOfStock && (
-            <p
-              role="alert"
-              className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600"
-            >
-              This product is currently out of stock.
-            </p>
-          )}
-
-          {submitError && (
-            <p
-              role="alert"
-              className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600"
-            >
-              {submitError}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting || outOfStock}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" /> Placing order…
-              </>
-            ) : outOfStock ? (
-              "Out of Stock"
-            ) : (
-              <>Place Order · {money(total)}</>
+            {outOfStock && (
+              <p
+                role="alert"
+                className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600"
+              >
+                This product is currently out of stock.
+              </p>
             )}
-          </button>
 
-          <p className="text-center text-xs text-muted-foreground">
-            Final price is confirmed by our system when you place the order.
-          </p>
-        </form>
+            {submitError && (
+              <p
+                role="alert"
+                className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600"
+              >
+                {submitError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || outOfStock}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" /> Placing order…
+                </>
+              ) : outOfStock ? (
+                "Out of Stock"
+              ) : (
+                <>Place Order · {money(total)}</>
+              )}
+            </button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Final price is confirmed by our system when you place the order.
+            </p>
+          </form>
+        </div>
       </div>
 
       {/* Mobile sticky button (hidden while the form is on screen) */}
