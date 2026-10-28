@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 
-const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || "z0scm2fbbr";
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || "z4vcn7f575";
 
 export default function Clarity() {
   if (!CLARITY_ID) return null;
