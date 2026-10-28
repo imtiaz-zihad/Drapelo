@@ -6,7 +6,6 @@ import { getSingleProduct } from "@/services/api";
 import { Product, Sleeve } from "@/types/product";
 import OrderButton from "@/components/Common/OrderButton";
 
-
 import ProductImageCarousel from "@/components/Product/ProductImageCarousel";
 import ViewContentTracker from "@/components/Product/ViewContentTracker";
 import SizeChartSection from "@/components/Home/SizeChart";
@@ -74,13 +73,16 @@ export default async function ProductDetails({
   // Only show rows that have data
   const specs = [
     { label: "Category", value: formatSlug(product.category) },
-    product.subcategory && { label: "Team", value: formatSlug(product.subcategory) },
+    product.subcategory && {
+      label: "Team",
+      value: formatSlug(product.subcategory),
+    },
     product.season && { label: "Season", value: product.season },
     sleeve && { label: "Sleeve", value: sleeve },
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-6">
+    <div className="mx-auto max-w-7xl px-6 pb-24 pt-6 lg:pb-8">
       <ViewContentTracker product={product} />
       {/* Breadcrumb */}
       <nav
@@ -109,7 +111,10 @@ export default async function ProductDetails({
               -{discount}%
             </span>
           )}
-          <ProductImageCarousel images={product.images ?? []} name={product.name} />
+          <ProductImageCarousel
+            images={product.images ?? []}
+            name={product.name}
+          />
         </div>
 
         {/* RIGHT: info */}
@@ -199,7 +204,10 @@ export default async function ProductDetails({
           {specs.length > 0 && (
             <dl className="divide-y divide-border/60 rounded-2xl border border-border/60 bg-card text-sm">
               {specs.map(({ label, value }) => (
-                <div key={label} className="flex justify-between gap-4 px-4 py-3">
+                <div
+                  key={label}
+                  className="flex justify-between gap-4 px-4 py-3"
+                >
                   <dt className="text-muted-foreground">{label}</dt>
                   <dd className="font-medium text-foreground">{value}</dd>
                 </div>

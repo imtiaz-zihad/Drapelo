@@ -31,10 +31,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${display.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -42,7 +43,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LayoutWrapper>{children}</LayoutWrapper>
-          {/* ager shob children: Navbar, children, Footer ... */}
         </ThemeProvider>
       </body>
     </html>
