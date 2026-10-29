@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, Loader2, Search } from "lucide-react";
+import { Eye, Loader2, Plus, Search } from "lucide-react";
 import {
   STATUSES,
   STATUS_BADGE,
@@ -13,6 +13,7 @@ import {
 } from "./lib";
 import type { EditPayload, Order, OrderStatus } from "./lib";
 import { ItemLine, OrderModal, productionNote } from "./OrderParts";
+import NewOrderModal from "./NewOrderModal";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -21,6 +22,7 @@ export default function OrdersPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<OrderStatus | "All">("All");
   const [selected, setSelected] = useState<Order | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(
     null,
@@ -115,6 +117,12 @@ export default function OrdersPage() {
     }
   };
 
+  const handleCreated = (order: Order) => {
+    setOrders((prev) => [order, ...prev]);
+    setNewOpen(false);
+    flash(`Order #${shortId(order)} created`);
+  };
+
   const counts = useMemo(() => {
     const c: Record<string, number> = { All: orders.length };
     STATUSES.forEach(
@@ -142,9 +150,19 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Orders</h1>
-        <p className="text-muted-foreground">{orders.length} total orders</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold md:text-3xl">Orders</h1>
+          <p className="text-muted-foreground">{orders.length} total orders</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setNewOpen(true)}
+          className="flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4" />
+          New order
+        </button>
       </div>
 
       {/* Filters */}
@@ -277,6 +295,14 @@ export default function OrdersPage() {
           onChangeStatus={changeStatus}
           onCopyNote={copyNote}
           onSaveEdit={saveEdit}
+        />
+      )}
+
+      {/* New order modal */}
+      {newOpen && (
+        <NewOrderModal
+          onClose={() => setNewOpen(false)}
+          onCreated={handleCreated}
         />
       )}
 
