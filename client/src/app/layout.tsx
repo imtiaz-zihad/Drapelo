@@ -4,6 +4,8 @@ import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import ThemeProvider from "@/components/Common/ThemeProvider";
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.drapelo.shop";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -18,9 +20,21 @@ const display = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "Drapelo",
+  metadataBase: new URL(SITE),
+  title: {
+    default: "Drapelo | Racing-inspired F1 Jackets in Bangladesh",
+    template: "%s | Drapelo",
+  },
   description:
-    "Premium racing-inspired jackets. Cash on delivery all over Bangladesh.",
+    "Premium racing-inspired F1 jackets with full embroidery. Ferrari and Red Bull style jackets. Cash on delivery all over Bangladesh.",
+  openGraph: {
+    type: "website",
+    siteName: "Drapelo",
+    url: SITE,
+    
+    images: ["/logodrapelo.png"],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({

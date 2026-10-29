@@ -10,6 +10,8 @@ import ProductImageCarousel from "@/components/Product/ProductImageCarousel";
 import ViewContentTracker from "@/components/Product/ViewContentTracker";
 import SizeChartSection from "@/components/Home/SizeChart";
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.drapelo.shop";
+
 const SLEEVE_LABEL: Record<Sleeve, string> = {
   half: "Half Sleeve",
   full: "Full Sleeve",
@@ -42,6 +44,7 @@ export async function generateMetadata({
   return {
     title: product.name,
     description: `Buy ${product.name} for ৳${product.discountedPrice.toLocaleString()}. Cash on delivery all over Bangladesh.`,
+    alternates: { canonical: `/product/${id}` },
     openGraph: {
       title: product.name,
       images: product.images?.[0] ? [product.images[0]] : [],
@@ -81,9 +84,36 @@ export default async function ProductDetails({
     sleeve && { label: "Sleeve", value: sleeve },
   ].filter(Boolean) as { label: string; value: string }[];
 
+  // Structured data so Google can show price / stock in search results
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images ?? [],
+    description: product.description || product.name,
+    brand: { "@type": "Brand", name: "Drapelo" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "BDT",
+      price: product.discountedPrice,
+      availability: outOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+      url: `${SITE}/product/${product._id}`,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-6 pb-24 pt-6 lg:pb-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+
       <ViewContentTracker product={product} />
+
       {/* Breadcrumb */}
       <nav
         aria-label="Breadcrumb"
@@ -168,7 +198,7 @@ export default async function ProductDetails({
             </p>
           )}
 
-          {/* Size (with Size Chart popup) + quantity + order */}
+          {/* Size (with Size Chart popup) + quantity + inline order form */}
           <OrderButton
             productId={product._id}
             productName={product.name}
