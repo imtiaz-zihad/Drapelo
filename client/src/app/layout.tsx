@@ -3,6 +3,7 @@ import { Inter, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import ThemeProvider from "@/components/Common/ThemeProvider";
+import LiveTracker from "@/components/Common/LiveTracker";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.drapelo.shop";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <LiveTracker />
           <LayoutWrapper>{children}</LayoutWrapper>
         </ThemeProvider>
       </body>

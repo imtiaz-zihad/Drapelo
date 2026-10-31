@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Activity,
   LayoutDashboard,
   LogOut,
   Package,
@@ -18,6 +19,7 @@ const MENU = [
   { name: "Products", path: "/admin/products", icon: Package },
   { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
   { name: "Abandoned", path: "/admin/abandoned", icon: PhoneMissed },
+  { name: "Live", path: "/admin/live", icon: Activity },
 ];
 
 export default function AdminLayout({

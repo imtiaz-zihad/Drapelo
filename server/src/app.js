@@ -51,6 +51,7 @@ app.get("/health", (req, res) => res.status(200).json({ ok: true }));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/abandoned", require("./routes/abandonedRoutes"));
+app.use("/api/live", require("./routes/liveRoutes"));
 
 const { login } = require("./middleware/adminAuth");
 const loginLimiter = rateLimit({
