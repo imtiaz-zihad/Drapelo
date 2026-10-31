@@ -1,6 +1,10 @@
 // src/routes/liveRoutes.js
 const router = require("express").Router();
 const { requireAdmin } = require("../middleware/adminAuth");
+const PageStat = require("../models/PageStat");
+const PageVisitor = require("../models/PageVisitor");
+
+/* ---------------- live visitors (in-memory) ---------------- */
 
 const ACTIVE_MS = 45_000; // "online" = pinged in the last 45s
 const MAX_SESSIONS = 5000; // memory guard
@@ -14,7 +18,7 @@ setInterval(() => {
   }
 }, 60_000).unref();
 
-// Public: the website pings this
+// Public: the website pings this every ~20s
 router.post("/ping", (req, res) => {
   const { id, path } = req.body || {};
   if (typeof id === "string" && id.length >= 8 && id.length <= 64) {
@@ -47,6 +51,137 @@ router.get("/", requireAdmin, (_req, res) => {
     .slice(0, 8);
 
   res.json({ online, pages });
+});
+
+/* ---------------- page views (MongoDB, lifetime) ---------------- */
+
+// Only real storefront pages are counted (keeps the collection small/clean)
+const ALLOWED_PATH =
+  /^\/(?:product\/[a-f0-9]{24}|category(?:\/[\w-]{1,40})?|checkout|track-order)?$/i;
+
+// today's date in Bangladesh time (UTC+6)
+const todayBD = () =>
+  new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+// run once, retry once (two first-hits at the same instant can collide on the unique index)
+const withRetry = async (fn) => {
+  try {
+    await fn();
+  } catch {
+    await fn();
+  }
+};
+
+const bumpViews = (path, date) =>
+  PageStat.updateOne({ path, date }, { $inc: { views: 1 } }, { upsert: true });
+
+const markVisitor = (path, vid, date) =>
+  PageVisitor.updateOne(
+    { path, vid },
+    { $set: { lastDate: date }, $setOnInsert: { firstDate: date } },
+    { upsert: true },
+  );
+
+// Public: the website calls this once per page view
+router.post("/view", async (req, res) => {
+  const { path: raw, vid } = req.body || {};
+
+  if (typeof raw === "string" && raw.length <= 120) {
+    const path = raw.split("?")[0].split("#")[0].replace(/\/+$/, "") || "/";
+
+    if (ALLOWED_PATH.test(path)) {
+      const date = todayBD();
+
+      try {
+        await withRetry(() => bumpViews(path, date));
+      } catch (e) {
+        console.error("Page view not saved:", e.message);
+      }
+
+      if (typeof vid === "string" && vid.length >= 8 && vid.length <= 64) {
+        try {
+          await withRetry(() => markVisitor(path, vid, date));
+        } catch (e) {
+          console.error("Visitor not saved:", e.message);
+        }
+      }
+    }
+  }
+
+  res.status(204).end();
+});
+
+// Admin only: views + unique visitors per page (lifetime + today)
+router.get("/stats", requireAdmin, async (_req, res) => {
+  try {
+    const today = todayBD();
+
+    const [viewRows, uniqueRows, siteRows] = await Promise.all([
+      PageStat.aggregate([
+        {
+          $group: {
+            _id: "$path",
+            total: { $sum: "$views" },
+            today: {
+              $sum: { $cond: [{ $eq: ["$date", today] }, "$views", 0] },
+            },
+          },
+        },
+        { $sort: { total: -1 } },
+        { $limit: 100 },
+      ]),
+      PageVisitor.aggregate([
+        {
+          $group: {
+            _id: "$path",
+            unique: { $sum: 1 },
+            uniqueToday: {
+              $sum: { $cond: [{ $eq: ["$lastDate", today] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+      // site-wide unique visitors (a person counted once across all pages)
+      PageVisitor.aggregate([
+        {
+          $group: {
+            _id: "$vid",
+            today: { $max: { $cond: [{ $eq: ["$lastDate", today] }, 1, 0] } },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            unique: { $sum: 1 },
+            uniqueToday: { $sum: "$today" },
+          },
+        },
+      ]),
+    ]);
+
+    const uniqueByPath = Object.fromEntries(uniqueRows.map((r) => [r._id, r]));
+
+    const pages = viewRows.map((r) => ({
+      path: r._id,
+      total: r.total,
+      today: r.today,
+      unique: uniqueByPath[r._id]?.unique ?? 0,
+      uniqueToday: uniqueByPath[r._id]?.uniqueToday ?? 0,
+    }));
+
+    const site = siteRows[0] || { unique: 0, uniqueToday: 0 };
+
+    res.json({
+      totalViews: pages.reduce((s, p) => s + p.total, 0),
+      todayViews: pages.reduce((s, p) => s + p.today, 0),
+      uniqueVisitors: site.unique,
+      uniqueToday: site.uniqueToday,
+      pages,
+    });
+  } catch (err) {
+    console.error("Page stats error:", err);
+    res.status(500).json({ message: "Failed to load page stats" });
+  }
 });
 
 module.exports = router;
