@@ -1,17 +1,23 @@
 import LiveVisitors from "./LiveVisitors";
+import PageViews from "./PageViews";
 
 export default function LivePage() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Live visitors</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">Live &amp; page views</h1>
         <p className="text-muted-foreground">
-          Website-e ekhon je-ra active (10 sec-e refresh hoy)
+          Ekhon kara active, ar kon page koto bar dekha hoyeche
         </p>
       </div>
 
       <div className="max-w-md">
         <LiveVisitors />
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Page views</h2>
+        <PageViews />
       </div>
     </div>
   );
