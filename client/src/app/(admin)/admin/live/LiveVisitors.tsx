@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "./orders/lib";
+import { api } from "../orders/lib";
 
 type Live = { online: number; pages: { path: string; count: number }[] };
 
