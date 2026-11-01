@@ -3,7 +3,7 @@ import PageViews from "./PageViews";
 
 export default function LivePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold md:text-3xl">Live &amp; page views</h1>
         <p className="text-muted-foreground">
@@ -15,10 +15,7 @@ export default function LivePage() {
         <LiveVisitors />
       </div>
 
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">Page views</h2>
-        <PageViews />
-      </div>
+      <PageViews />
     </div>
   );
 }

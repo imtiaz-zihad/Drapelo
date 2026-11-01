@@ -39,6 +39,43 @@ function getVisitorId(): string | undefined {
   }
 }
 
+const cleanSrc = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30) || "other";
+
+// Where did this visit come from? utm_source wins, then the referrer.
+function detectSource(): string {
+  try {
+    const utm = new URLSearchParams(window.location.search).get("utm_source");
+    if (utm) return cleanSrc(utm);
+
+    if (!document.referrer) return "direct";
+    const host = new URL(document.referrer).hostname.replace(/^www\./, "");
+    if (host === window.location.hostname.replace(/^www\./, "")) return "direct";
+    if (/(^|\.)(facebook\.com|fb\.com|fb\.me)$/.test(host)) return "facebook";
+    if (/(^|\.)(messenger\.com|m\.me)$/.test(host)) return "msgr";
+    if (/(^|\.)instagram\.com$/.test(host)) return "instagram";
+    if (/(^|\.)google\./.test(host)) return "google";
+    if (/(^|\.)(whatsapp\.com|wa\.me)$/.test(host)) return "whatsapp";
+    return cleanSrc(host);
+  } catch {
+    return "direct";
+  }
+}
+
+// The source is decided once per tab session and reused on later pages.
+// `landing` is true only for the first page of the session.
+function getSource(): { src: string; landing: boolean } {
+  try {
+    const saved = sessionStorage.getItem("src");
+    if (saved) return { src: saved, landing: false };
+    const src = detectSource();
+    sessionStorage.setItem("src", src);
+    return { src, landing: true };
+  } catch {
+    return { src: detectSource(), landing: false };
+  }
+}
+
 // Run once in your own browser's console to stop counting your visits:
 //   localStorage.setItem("noTrack", "1")
 function optedOut(): boolean {
@@ -68,10 +105,11 @@ export default function LiveTracker() {
     }
     if (optedOut()) return;
 
-    // 1) lifetime page view (+ unique visitor): once per page
+    // 1) lifetime page view (+ unique visitor + source): once per page
     if (lastView.current !== pathname) {
       lastView.current = pathname;
-      post("view", { path: pathname, vid: getVisitorId() });
+      const { src, landing } = getSource();
+      post("view", { path: pathname, vid: getVisitorId(), src, landing });
     }
 
     // 2) live presence: every 20s while the tab is visible
